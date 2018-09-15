@@ -1,3 +1,5 @@
+#!/bin/bash
+
 REGION=$1
 STACK_NAME=$2
 
@@ -11,7 +13,7 @@ NC='\033[0m' # No Color
 # Fetch the stack metadata for use later
 printf "${PRIMARY}* Fetching current stack state${NC}\n";
 
-QUERY=$(cat <<-EOF
+QUERY=cat <<-EOF
 [
 	Stacks[0].Outputs[?OutputKey==\`ClusterName\`].OutputValue,
 	Stacks[0].Outputs[?OutputKey==\`ALBArn\`].OutputValue,
@@ -19,13 +21,14 @@ QUERY=$(cat <<-EOF
 	Stacks[0].Outputs[?OutputKey==\`Url\`].OutputValue,
 	Stacks[0].Outputs[?OutputKey==\`VPCId\`].OutputValue
 ]
-EOF)
+EOF
 
 RESULTS=$(aws cloudformation describe-stacks \
 	--stack-name $STACK_NAME \
 	--region $REGION \
 	--query "$QUERY" \
 	--output text);
+
 RESULTS_ARRAY=($RESULTS)
 
 CLUSTER_NAME=${RESULTS_ARRAY[0]}
@@ -78,7 +81,7 @@ do
 	printf "${PRIMARY}* Creating new task definition for \`${SERVICE_NAME}\`${NC}\n";
 
 	# Build an create the task definition for the container we just pushed
-	CONTAINER_DEFINITIONS=$(cat <<-EOF
+	CONTAINER_DEFINITIONS=cat <<-'EOF'
 		[{
 			"name": "$SERVICE_NAME",
 			"image": "$REPO:$TAG",
@@ -90,7 +93,7 @@ do
 			}],
 			"essential": true
 		}]
-	EOF)
+	EOF
 
 	TASK_DEFINITION_ARN=`aws ecs register-task-definition \
 		--region $REGION \
@@ -165,13 +168,13 @@ do
 
 			printf "${PRIMARY}* Creating new web facing service \`${SERVICE_NAME}\`${NC}\n";
 
-			LOAD_BALANCERS=$(cat <<-EOF
+			LOAD_BALANCERS=cat <<-'EOF'
 				[{
 					"targetGroupArn": "$TARGET_GROUP_ARN",
 					"containerName": "$SERVICE_NAME",
 					"containerPort": 3000
 				}]
-			EOF)
+			EOF
 
 			RESULT=`aws ecs create-service \
 				--region $REGION \

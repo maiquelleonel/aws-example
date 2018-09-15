@@ -10,6 +10,10 @@ app.use(function *(next){
   console.log('%s %s - %s', this.method, this.url, ms);
 });
 
+router.get('/api/posts', function *(){
+    this.body = db.posts
+})
+
 router.get('/api/posts/in-thread/:threadId', function *() {
   const id = parseInt(this.params.threadId);
   this.body = db.posts.filter((post) => post.thread == id);
